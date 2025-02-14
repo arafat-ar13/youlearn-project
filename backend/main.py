@@ -22,7 +22,7 @@ async def extract(url: str):
     """
     try:
         extractor = PDFExtractor()
-        pdf_text = extractor.extract_from_url(url)
+        pdf_text = extractor.extract(url)
 
         return PDFResponse(
             text=pdf_text

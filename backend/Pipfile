@@ -10,6 +10,8 @@ requests = "*"
 "pdfminer.six" = "*"
 isort = "*"
 autopep8 = "*"
+azure-ai-documentintelligence = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

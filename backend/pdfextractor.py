@@ -10,6 +10,9 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 
+import fitz
+import pymupdf
+
 from azure_ai import get_text_from_pdf
 
 
@@ -118,7 +121,62 @@ class PDFExtractor:
                 status_code=500,
                 detail=f"Internal server error while processing PDF: {str(e)}"
             ) from e
-
+        
+    def extract_with_pymu(self, pdf_url: str) -> str:
+        """
+        Extract text from PDF using PyMuPDF (fitz) with optimized performance.
+        
+        Args:
+            pdf_url: Direct url to the pdf
+            
+        Returns:
+            Formatted text from the PDF
+        """
+        try:
+            # Get PDF content
+            response = self._check_url(pdf_url)
+            
+            # Create a memory buffer from the response content
+            pdf_buffer = BytesIO(response.content)
+            
+            # Open the PDF with PyMuPDF
+            doc = fitz.open(stream=pdf_buffer, filetype="pdf")
+            
+            # Get text all at once with blocks formatting
+            text = ""
+            for page in doc:
+                # Using "blocks" format maintains paragraph structure 
+                # while being much faster than "dict" format
+                page_text = page.get_text("blocks")
+                
+                # Join blocks with double newlines for paragraph separation
+                if page_text:
+                    text += "\n\n".join(block[4] for block in page_text if block[4].strip())
+                    text += "\n\n---\n\n"  # Page separator
+            
+            # Clean up
+            doc.close()
+            pdf_buffer.close()
+            
+            # Basic cleanup of the text - single pass
+            text = text.strip()
+            text = text.replace("\n\n\n", "\n\n")  # Remove excessive newlines
+            
+            return text
+                
+        except fitz.FileDataError as e:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or corrupted PDF file"
+            ) from e
+        except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal server error while processing PDF: {str(e)}"
+            ) from e
+        
     def extract(self, pdf_url: str) -> str:
         """
         Top level extraction method. The function does the following:

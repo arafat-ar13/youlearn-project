@@ -20,7 +20,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
       <Viewer
         fileUrl={fileUrl}
         plugins={[defaultLayoutPluginInstance]}
-        className="h-full"
       />
     </Worker>
   );

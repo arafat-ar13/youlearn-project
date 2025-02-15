@@ -22,7 +22,7 @@ export default function Home() {
       setIsLoading(true);
       const data = await extractPdfText(inputUrl);
       setPdfText(data.text);
-      setProcessedUrl(inputUrl); // Only set the URL for PDF viewer after processing
+      setProcessedUrl(inputUrl);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -69,8 +69,19 @@ export default function Home() {
             {pdfText && (
               <div className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto">
                 <h2 className="text-xl font-semibold mb-4 text-black">Extracted Text</h2>
-                <div className="prose max-w-none text-black">
-                  <ReactMarkdown>{pdfText}</ReactMarkdown>
+                <div className="prose max-w-none text-black px-4">
+                  <ReactMarkdown
+                    components={{
+                      // Style headers
+                      h2: ({node, ...props}) => <h2 className="text-xl font-semibold mt-6 mb-4 text-center" {...props} />,
+                      // Style paragraphs
+                      p: ({node, ...props}) => <p className="mb-4 text-base leading-relaxed" {...props} />,
+                      // Style horizontal rules (page breaks)
+                      hr: ({node, ...props}) => <hr className="my-8 border-t border-gray-300" {...props} />
+                    }}
+                  >
+                    {pdfText}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}

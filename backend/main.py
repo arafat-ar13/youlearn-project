@@ -32,7 +32,7 @@ async def extract(url: str):
     """
     try:
         extractor = PDFExtractor()
-        pdf_text = extractor.extract(url)
+        pdf_text = extractor.extract_with_pymu(url)
 
         return PDFResponse(
             text=pdf_text

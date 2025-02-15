@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+const config: NextConfig = {
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    return config;
+  },
+  transpilePackages: [
+    '@react-pdf-viewer/core',
+    '@react-pdf-viewer/default-layout'
+  ]
+}
 
-export default nextConfig;
+export default config;

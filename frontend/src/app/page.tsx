@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { extractPdfText } from '@/services/api';
-import ReactMarkdown from 'react-markdown';
 
 // Dynamically import the PDF viewer components with no SSR
 const PDFViewer = dynamic(
@@ -11,22 +10,53 @@ const PDFViewer = dynamic(
   { ssr: false }
 );
 
+// Interface for block data
+interface TextBlock {
+  text: string;
+  page: number;
+  bbox: number[];
+}
+
 export default function Home() {
   const [inputUrl, setInputUrl] = useState('');
   const [processedUrl, setProcessedUrl] = useState('');
   const [pdfText, setPdfText] = useState<string | null>(null);
+  const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedText, setSelectedText] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
       const data = await extractPdfText(inputUrl);
       setPdfText(data.text);
+      setTextBlocks(data.blocks);
       setProcessedUrl(inputUrl);
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to handle text selection in the transcript
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || !selection.toString()) return;
+
+    const selectedText = selection.toString().trim();
+    if (selectedText) {
+      setSelectedText(selectedText);
+      // Find the block containing the selected text
+      const block = textBlocks.find(block => 
+        block.text.includes(selectedText)
+      );
+
+      if (block) {
+        console.log('Found matching block:', block);
+        // For now, just log the block info
+        // We'll implement highlighting differently
+      }
     }
   };
 
@@ -61,27 +91,22 @@ export default function Home() {
             <div className="bg-white rounded-lg shadow-sm p-4 h-full overflow-hidden">
               <h2 className="text-xl font-semibold mb-4 text-black">PDF View</h2>
               <div className="h-full">
-                <PDFViewer fileUrl={processedUrl} />
+                <PDFViewer 
+                  fileUrl={processedUrl} 
+                  selectedBlock={null}  // We'll implement highlighting differently
+                />
               </div>
             </div>
 
             {/* Extracted Text */}
             {pdfText && (
-              <div className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto">
+              <div 
+                className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto"
+                onMouseUp={handleTextSelection}
+              >
                 <h2 className="text-xl font-semibold mb-4 text-black">Extracted Text</h2>
-                <div className="prose max-w-none text-black px-4">
-                  <ReactMarkdown
-                    components={{
-                      // Style headers
-                      h2: ({node, ...props}) => <h2 className="text-xl font-semibold mt-6 mb-4 text-center" {...props} />,
-                      // Style paragraphs
-                      p: ({node, ...props}) => <p className="mb-4 text-base leading-relaxed" {...props} />,
-                      // Style horizontal rules (page breaks)
-                      hr: ({node, ...props}) => <hr className="my-8 border-t border-gray-300" {...props} />
-                    }}
-                  >
-                    {pdfText}
-                  </ReactMarkdown>
+                <div className="prose max-w-none text-black px-4 whitespace-pre-line">
+                  {pdfText}
                 </div>
               </div>
             )}

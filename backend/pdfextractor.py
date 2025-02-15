@@ -122,47 +122,59 @@ class PDFExtractor:
                 detail=f"Internal server error while processing PDF: {str(e)}"
             ) from e
         
-    def extract_with_pymu(self, pdf_url: str) -> str:
+    def extract_with_pymu(self, pdf_url: str) -> dict:
         """
-        Extract text from PDF using PyMuPDF (fitz) with optimized performance.
+        Extract text from PDF using PyMuPDF (fitz) with bounding box information.
         
         Args:
             pdf_url: Direct url to the pdf
             
         Returns:
-            Formatted text from the PDF
+            Dictionary containing text content and bounding box information
         """
         try:
-            # Get PDF content
             response = self._check_url(pdf_url)
-            
-            # Create a memory buffer from the response content
             pdf_buffer = BytesIO(response.content)
-            
-            # Open the PDF with PyMuPDF
             doc = fitz.open(stream=pdf_buffer, filetype="pdf")
             
-            # Get text all at once with blocks formatting
-            text = ""
-            for page in doc:
-                # Using "blocks" format maintains paragraph structure 
-                # while being much faster than "dict" format
-                page_text = page.get_text("blocks")
+            # Store both text and block information
+            result = {
+                "text": "",  # Combined text for display
+                "blocks": []  # List of {text, page, bbox} for highlighting
+            }
+            
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                page_blocks = page.get_text("blocks")
                 
-                # Join blocks with double newlines for paragraph separation
-                if page_text:
-                    text += "\n\n".join(block[4] for block in page_text if block[4].strip())
-                    text += "\n\n---\n\n"  # Page separator
+                for block in page_blocks:
+                    # block[4] is the text content
+                    # block[0:4] contains x0,y0,x1,y1 coordinates
+                    text = block[4].strip()
+                    if text:
+                        # Add to the display text
+                        result["text"] += text + "\n\n"
+                        
+                        # Store block info for highlighting
+                        result["blocks"].append({
+                            "text": text,
+                            "page": page_num,
+                            "bbox": list(block[0:4])  # x0,y0,x1,y1
+                        })
+                
+                # Add page separator in display text
+                if page_num < len(doc) - 1:
+                    result["text"] += "---\n\n"
             
             # Clean up
             doc.close()
             pdf_buffer.close()
             
-            # Basic cleanup of the text - single pass
-            text = text.strip()
-            text = text.replace("\n\n\n", "\n\n")  # Remove excessive newlines
+            # Clean up the display text
+            result["text"] = result["text"].strip()
+            result["text"] = result["text"].replace("\n\n\n", "\n\n")
             
-            return text
+            return result
                 
         except fitz.FileDataError as e:
             raise HTTPException(

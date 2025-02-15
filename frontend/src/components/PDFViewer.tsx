@@ -3,16 +3,21 @@
 import React from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-
-// Import the styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
-interface PDFViewerProps {
-  fileUrl: string;
+interface TextBlock {
+  text: string;
+  page: number;
+  bbox: number[];
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl }) => {
+interface PDFViewerProps {
+  fileUrl: string;
+  selectedBlock: TextBlock | null;
+}
+
+const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedBlock }) => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   return (

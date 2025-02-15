@@ -1,11 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
+from typing import List
 from pdfextractor import PDFExtractor
 
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,15 +14,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class TextBlock(BaseModel):
+    text: str
+    page: int
+    bbox: List[float]
 
 class PDFResponse(BaseModel):
     text: str
-
+    blocks: List[TextBlock]
 
 @app.get("/{name}")
 async def root(name):
     return {"message": f"Hello {name}"}
-
 
 @app.get("/extract/{url:path}", response_model=PDFResponse)
 async def extract(url: str):
@@ -32,10 +34,12 @@ async def extract(url: str):
     """
     try:
         extractor = PDFExtractor()
-        pdf_text = extractor.extract_with_pymu(url)
-
+        result = extractor.extract_with_pymu(url)
+        
+        # Since extract_with_pymu now returns a dict with 'text' and 'blocks'
         return PDFResponse(
-            text=pdf_text
+            text=result["text"],
+            blocks=result["blocks"]
         )
     except HTTPException as e:
         raise e

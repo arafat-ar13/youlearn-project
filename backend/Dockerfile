@@ -7,8 +7,9 @@ WORKDIR /app
 # Copy requirements file
 COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies, with special handling for PyMuPDF
+RUN pip install --no-cache-dir --only-binary :all: PyMuPDF && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .

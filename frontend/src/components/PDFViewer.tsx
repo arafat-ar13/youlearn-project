@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
@@ -19,14 +17,22 @@ interface PDFViewerProps {
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedBlock }) => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  
+  // Convert the original URL to use our proxy
+  const proxyUrl = `http://localhost:8000/proxy-pdf/${encodeURIComponent(fileUrl)}`;
 
   return (
-    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
-      <Viewer
-        fileUrl={fileUrl}
-        plugins={[defaultLayoutPluginInstance]}
-      />
-    </Worker>
+    <div className="h-full">
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.js">
+        <div style={{ height: '100%' }}>
+          <Viewer
+            fileUrl={proxyUrl}
+            plugins={[defaultLayoutPluginInstance]}
+            withCredentials={false}
+          />
+        </div>
+      </Worker>
+    </div>
   );
 };
 

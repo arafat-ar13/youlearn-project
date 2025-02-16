@@ -23,7 +23,7 @@ export default function Home() {
   const [pdfText, setPdfText] = useState<string | null>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedText, setSelectedText] = useState<string | null>(null);
+  // const [selectedText, setSelectedText] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     try {
@@ -46,7 +46,7 @@ export default function Home() {
 
     const selectedText = selection.toString().trim();
     if (selectedText) {
-      setSelectedText(selectedText);
+      // setSelectedText(selectedText);
       // Find the block containing the selected text
       const block = textBlocks.find(block => 
         block.text.includes(selectedText)

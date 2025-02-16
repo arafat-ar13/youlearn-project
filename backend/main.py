@@ -1,31 +1,36 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import List
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
 from pdfextractor import PDFExtractor
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your Next.js app address
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],  # Your Next.js app address
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 
 class TextBlock(BaseModel):
     text: str
     page: int
     bbox: List[float]
 
+
 class PDFResponse(BaseModel):
     text: str
     blocks: List[TextBlock]
 
+
 @app.get("/{name}")
 async def root(name):
     return {"message": f"Hello {name}"}
+
 
 @app.get("/extract/{url:path}", response_model=PDFResponse)
 async def extract(url: str):
@@ -34,8 +39,8 @@ async def extract(url: str):
     """
     try:
         extractor = PDFExtractor()
-        result = extractor.extract_with_pymu(url)
-        
+        result = extractor.extract(url)
+
         # Since extract_with_pymu now returns a dict with 'text' and 'blocks'
         return PDFResponse(
             text=result["text"],

@@ -63,7 +63,7 @@ class PDFExtractor:
 
         return page_buffer
 
-    def _process_page(self, page, page_num: int) -> tuple:
+    def _process_page(self, pdf_buffer, page, page_num: int) -> tuple:
         """
         Process a single page using PyMuPDF, falling back to Azure AI if needed
 
@@ -100,9 +100,9 @@ class PDFExtractor:
             # Use Azure AI for non-searchable page
             print(f"AZURE:")
 
-            page_buffer = self._get_page_buffer(page)
+            # page_buffer = self._get_page_buffer(page)
 
-            azure_result = get_text_with_bboxes(page_buffer, page_num=page_num)
+            azure_result = get_text_with_bboxes(pdf_buffer, page_num=page_num)
             if azure_result["text"]:
                 page_text = azure_result["text"]
                 blocks.extend(azure_result["blocks"])
@@ -131,7 +131,7 @@ class PDFExtractor:
 
             for page_num in range(len(doc)):
                 page = doc[page_num]
-                page_text, page_blocks = self._process_page(page, page_num)
+                page_text, page_blocks = self._process_page(pdf_buffer, page, page_num)
 
                 # Add page text and blocks to result
                 result["text"] += page_text
@@ -139,7 +139,7 @@ class PDFExtractor:
 
                 # Add page separator if not the last page
                 if page_num < len(doc) - 1:
-                    result["text"] += "---\n\n"
+                    result["text"] += "\n\n---\n\n"
 
             # Clean up
             doc.close()

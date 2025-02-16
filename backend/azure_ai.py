@@ -77,7 +77,7 @@ def get_text_with_bboxes(pdf_buffer: BytesIO, page_num: Optional[int] = None) ->
     Extract text and bounding boxes from a PDF using Azure Document Intelligence API.
 
     Args:
-        url: URL of the PDF document
+        pdf_buffer: BytesIO buffer containing the PDF
         page_num: Optional page number (0-based) to extract from. If None, processes entire document.
 
     Returns:
@@ -93,22 +93,52 @@ def get_text_with_bboxes(pdf_buffer: BytesIO, page_num: Optional[int] = None) ->
     text = ""
 
     if page_num is not None:
-        # Skip pages we're not interested in if page_num is specified
         page = result.pages[0]
+        current_paragraph = []
+        last_y = None
+        last_x = None
 
-        page_text = ""
         for line in page.lines:
-            page_text += line.content + " "
+            current_y = line.polygon[1]  # Get y-coordinate of current line
+            current_x = line.polygon[0]  # Get x-coordinate of current line
+            
+            # Check if this is potentially a new paragraph by looking at:
+            # 1. Significant vertical gap
+            # 2. Indentation at the start of a line
+            # 3. Previous line ends with sentence-ending punctuation
+            is_new_paragraph = False
+            
+            if last_y is not None:
+                vertical_gap = current_y - last_y
+                # Check for larger vertical gap indicating paragraph break
+                if vertical_gap > 0.3:  # Adjusted threshold for paragraph separation
+                    is_new_paragraph = True
+                # Check for indentation
+                elif last_x is not None and current_x - last_x > 0.3:
+                    is_new_paragraph = True
+                # Check if last line ended with sentence-ending punctuation
+                elif current_paragraph and any(current_paragraph[-1].content.strip().endswith(p) 
+                                            for p in ['.', '!', '?']):
+                    # Only consider it a paragraph break if we're not in the middle of a sentence
+                    next_word = line.content.strip()
+                    if next_word and next_word[0].isupper():
+                        is_new_paragraph = True
+
+            if is_new_paragraph and current_paragraph:
+                # Join current paragraph with single spaces and add double newline
+                text += " ".join(l.content.strip() for l in current_paragraph) + "\n\n"
+                current_paragraph = []
+
+            current_paragraph.append(line)
+            last_y = current_y
+            last_x = current_x
 
             # Add bounding box information
-            # Azure returns polygon as [x1, y1, x2, y2, x3, y3, x4, y4]
             polygon = line.polygon
             if polygon and len(polygon) >= 8:
-                # Extract coordinates
                 x_coords = [polygon[i] for i in range(0, len(polygon), 2)]
                 y_coords = [polygon[i] for i in range(1, len(polygon), 2)]
 
-                # Convert to x0,y0,x1,y1 format (min/max coordinates)
                 bbox = [
                     min(x_coords),  # x0
                     min(y_coords),  # y0
@@ -118,11 +148,13 @@ def get_text_with_bboxes(pdf_buffer: BytesIO, page_num: Optional[int] = None) ->
 
                 blocks.append({
                     "text": line.content,
-                    "page": page.page_number - 1,  # Convert to 0-based
+                    "page": page_num,
                     "bbox": bbox
                 })
 
-        text += page_text.strip() + "\n\n"
+        # Add the last paragraph if it exists
+        if current_paragraph:
+            text += " ".join(l.content.strip() for l in current_paragraph)
 
     return {
         "text": text.strip(),

@@ -13,6 +13,14 @@ If the page text returns empty, that means that it is image-based and will requi
 - Fast API 
 - Docker contained in 2 gig memory and 2 CPU cores
 
+Initially, I was using Azure's Computer Vision OCR service as it provided excellent bbox coordinates that integrated seamlessly with my highlighting system. However, I discovered just 2 hours before the deadline that Azure's free tier cannot process more than 2 pages, which made it unsuitable for the project requirements (handling PDFs up to 2000 pages). This forced me to quickly switch to Google Cloud Vision API, which provides excellent text recognition but returns bbox coordinates in a different format. Due to time constraints, I couldn't implement the coordinate transformation system needed on the frontend to make highlighting work with Google's format as it had with Azure.
+
+I chose a cloud-based OCR solution over local alternatives like Tesseract because:
+1. Performance - Google's Vision API processes pages much faster than Tesseract would within our 2vCPU/2GB RAM constraints
+2. Accuracy - Cloud OCR services typically provide better accuracy
+3. Docker image size - Using Tesseract would require Ubuntu-level dependencies, significantly increasing the container size
+4. Resource utilization - A Python-only container uses fewer resources and stays within our constraints even when processing large documents
+
 For bbox highlighting I have achieved it, though not fully. For text-based PDF files, whenever a line on the transcript on the right is highlighted, the corresponding line will highlight on the PDF. But where it falls short is that I could not develop this feature for image-based text PDFs, though my app can render them perfect. Moreover, only single lines highlighted show on the original PDF on the left, if you highlight multiple lines, the PDF highlighter does NOT work. I needed more time for that. Zooming works flawlessly. For highlighting, I am using a mix of bbox coordinates and pdf-search functionality. Moreover, if you select just one word, multiple words on the right-side PDF will be highlighted. As you select a good chunk of unique text, only that text will be highlighted on the right-side PDF.
 
 The `/extract` enpoint will give you text, bbox which is a list of four floats, plus it will also return a bunch of other info that my app uses.
@@ -29,11 +37,11 @@ The front-end is hosted at: [https://youlearn-project-site.vercel.app/](https://
 
 ## Performance
 
-I have ran the application (backend) multiple times in a docker contained environment that had 2 cpu cores and 2 gigs of memory, and I have done extensive testing of the app and it has always worked fine. Even with the big 1300 pages PDF, the app has performed significantly good (thanks to PyMuPDF, PDFMiner was 10x slower, if not more).
+I have ran the application (backend) multiple times in a docker contained environment that had 2 cpu cores and 2 gigs of memory, and I have done extensive testing of the app and it has always worked fine. Even with the big 1300 pages PDF, the app has performed significantly good (thanks to PyMuPDF, PDFMiner was 10x slower, if not more). Processing time for large files is less than 10 seconds per file, which is significantly better than the 75-second requirement in the spec.
 
 ## Flaws
 
-The highlighting feature ONLY works for PDF pages that contain real text and does not work for image based PDF or PDF pages. For text-based PDFs the highlighting feature only works for single line highlighting, if you select multiple lines on the transcript, that unfortunately does not get highlighted.
+The highlighting feature ONLY works for PDF pages that contain real text and does not work for image based PDF or PDF pages. For text-based PDFs the highlighting feature only works for single line highlighting, if you select multiple lines on the transcript, that unfortunately does not get highlighted. As mentioned earlier, highlighting for OCR'd content was working with Azure's coordinate system, but couldn't be adapted to Google Cloud Vision's format in the limited time after the necessary platform switch.
 
 ## Building
 

@@ -1,16 +1,14 @@
 from io import BytesIO
-
 import fitz
 import requests
 from fastapi import HTTPException
 
-from azure_ai import get_text_with_bboxes
-
+from google_ai import GoogleAIPDFExtractor
 
 class PDFExtractor:
     def __init__(self):
-        pass
-
+        self.google_ai = GoogleAIPDFExtractor()
+        
     def _check_url(self, pdf_url: str) -> requests.Response:
         """
         Validate URL and return PDF content buffer
@@ -39,38 +37,13 @@ class PDFExtractor:
                 detail=f"Internal server error while checking PDF URL: {str(e)}"
             ) from e
 
-    def _get_page_buffer(self, page) -> BytesIO:
+    def _process_page(self, page, page_num: int) -> tuple:
         """
-        Convert a single page to a PDF buffer
-
-        Args:
-            page: fitz.Page object
-
-        Returns:
-            BytesIO buffer containing single-page PDF
-        """
-        # Create a new PDF document with just this page
-        doc_single = fitz.open()
-        doc_single.insert_pdf(
-            page.parent, from_page=page.number, to_page=page.number)
-
-        # Get the bytes and create a buffer
-        pdf_bytes = doc_single.write()
-        page_buffer = BytesIO(pdf_bytes)
-
-        # Clean up
-        doc_single.close()
-
-        return page_buffer
-
-    def _process_page(self, pdf_buffer, page, page_num: int) -> tuple:
-        """
-        Process a single page using PyMuPDF, falling back to Azure AI if needed
+        Process a single page using PyMuPDF, falling back to Google Cloud Vision for non-searchable pages
 
         Args:
             page: fitz.Page object
             page_num: Page number (0-based)
-            pdf_url: Original PDF URL for Azure AI fallback
 
         Returns:
             Tuple of (display_text, blocks) where blocks contain text and bbox info
@@ -82,10 +55,8 @@ class PDFExtractor:
         # Check if page has searchable text
         has_text = any(block[4].strip() for block in page_blocks)
 
-        # print(has_text)?
-
         if has_text:
-            print("PyMUUUU")
+            print(f"Page {page_num} processed with PyMuPDF")
             # Process searchable text with PyMuPDF
             for block in page_blocks:
                 text = block[4].strip()
@@ -99,23 +70,32 @@ class PDFExtractor:
                         "height": page.rect.height,
                         "method": "pymupdf"
                     })
-
         else:
-            # Use Azure AI for non-searchable page
-            print(f"AZURE:")
-
-            # page_buffer = self._get_page_buffer(page)
-
-            azure_result = get_text_with_bboxes(pdf_buffer, page_num=page_num)
-            if azure_result["text"]:
-                page_text = azure_result["text"]
-                blocks.extend(azure_result["blocks"])
+            print(f"Page {page_num} requires OCR, using Google Cloud Vision")
+            # Use Google Cloud Vision for non-searchable page
+            
+            # Get page dimensions
+            page_width = page.rect.width
+            page_height = page.rect.height
+            
+            # Render the page to an image
+            pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))  # Render at 300 DPI
+            img_bytes = pix.tobytes(output="png")
+            
+            # Process with Google Vision
+            google_result = self.google_ai.get_text_with_bboxes(
+                img_bytes, page_num, page_width, page_height
+            )
+            
+            if google_result["text"]:
+                page_text = google_result["text"]
+                blocks.extend(google_result["blocks"])
 
         return page_text, blocks
 
     def extract_with_pymu(self, pdf_url: str) -> dict:
         """
-        Extract text from PDF using PyMuPDF with fallback to Azure AI for non-searchable pages
+        Extract text from PDF using PyMuPDF with fallback to Google Cloud Vision for non-searchable pages
 
         Args:
             pdf_url: Direct url to the pdf
@@ -135,7 +115,7 @@ class PDFExtractor:
 
             for page_num in range(len(doc)):
                 page = doc[page_num]
-                page_text, page_blocks = self._process_page(pdf_buffer, page, page_num)
+                page_text, page_blocks = self._process_page(page, page_num)
 
                 # Add page text and blocks to result
                 result["text"] += page_text

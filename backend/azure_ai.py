@@ -149,7 +149,10 @@ def get_text_with_bboxes(pdf_buffer: BytesIO, page_num: Optional[int] = None) ->
                 blocks.append({
                     "text": line.content,
                     "page": page_num,
-                    "bbox": bbox
+                    "bbox": bbox,
+                    "width": page.width,
+                    "height": page.height,
+                    "method": "azure"
                 })
 
         # Add the last paragraph if it exists

@@ -15,6 +15,9 @@ interface TextBlock {
   text: string;
   page: number;
   bbox: number[];
+  width: number;
+  height: number;
+  method: string;
 }
 
 export default function Home() {
@@ -23,7 +26,8 @@ export default function Home() {
   const [pdfText, setPdfText] = useState<string | null>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  // const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [selectedTextBlock, setSelectedTextBlock] = useState<TextBlock[]>([]);
 
   const handleSubmit = async () => {
     try {
@@ -31,6 +35,7 @@ export default function Home() {
       const data = await extractPdfText(inputUrl);
       setPdfText(data.text);
       setTextBlocks(data.blocks);
+      console.log("DATA BLOCKSSSS", data.blocks);
       setProcessedUrl(inputUrl);
     } catch (error) {
       console.error('Error:', error);
@@ -44,19 +49,23 @@ export default function Home() {
     const selection = window.getSelection();
     if (!selection || !selection.toString()) return;
 
-    const selectedText = selection.toString().trim();
-    if (selectedText) {
-      // setSelectedText(selectedText);
+    const text = selection.toString().trim();
+    if (text) {
+      setSelectedText(text);
       // Find the block containing the selected text
       const block = textBlocks.find(block => 
-        block.text.includes(selectedText)
+        block.text.includes(text)
       );
-
       if (block) {
-        console.log('Found matching block:', block);
-        // For now, just log the block info
-        // We'll implement highlighting differently
+        setSelectedTextBlock([block]);
       }
+
+      // if (block) {
+      //   // console.log('Found matching block:', block);
+      //   // console.log("Selected text:", text)
+      //   // For now, just log the block info
+      //   // We'll implement highlighting differently
+      // }
     }
   };
 
@@ -93,7 +102,8 @@ export default function Home() {
               <div className="h-full">
                 <PDFViewer 
                   fileUrl={processedUrl} 
-                  selectedBlock={null}  // We'll implement highlighting differently
+                  selectedText={selectedText}
+                  selectedBlock={selectedTextBlock}
                 />
               </div>
             </div>

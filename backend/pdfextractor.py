@@ -94,8 +94,12 @@ class PDFExtractor:
                     blocks.append({
                         "text": text,
                         "page": page_num,
-                        "bbox": list(block[0:4])  # x0,y0,x1,y1
+                        "bbox": list(block[0:4]),  # x0,y0,x1,y1
+                        "width": page.rect.width,
+                        "height": page.rect.height,
+                        "method": "pymupdf"
                     })
+
         else:
             # Use Azure AI for non-searchable page
             print(f"AZURE:")

@@ -20,6 +20,9 @@ class TextBlock(BaseModel):
     text: str
     page: int
     bbox: List[float]
+    width: float
+    height: float
+    method: str
 
 class PDFResponse(BaseModel):
     text: str

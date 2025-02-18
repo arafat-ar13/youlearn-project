@@ -49,4 +49,20 @@ To run,
 sudo docker run -p 8000:8000 --env-file .env --network host --cpus="2" --memory="2g" pdf-processor
 ```
 
+Running the front end:
+
+While being in the `frontend` dir, 
+
+```
+npm install
+```
+
+To install packages and then do 
+
+```
+npm run dev
+```
+
+To run the app. Make sure it runs on localhost:3000 and the backend on localhost:8000.
+
 I hope you like my work! (I have skipped homework to complete this project!!)

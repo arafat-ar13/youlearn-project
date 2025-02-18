@@ -128,7 +128,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedText, selectedBl
   });
 
   // Convert the original URL to use our proxy
-  const proxyUrl = `http://localhost:8000/proxy-pdf/${encodeURIComponent(fileUrl)}`;
+  const proxyUrl = `https://backend-blue-leaf-1353.fly.dev/proxy-pdf/${encodeURIComponent(fileUrl)}`;
 
   return (
     <div className="h-full">

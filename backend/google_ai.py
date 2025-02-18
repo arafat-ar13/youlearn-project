@@ -2,12 +2,16 @@ import io
 from typing import Optional
 from google.cloud import vision
 from google.cloud.vision_v1 import types
+from google.api_core.client_options import ClientOptions
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
+client_options = ClientOptions(api_key=os.getenv("GOOGLE_API_KEY"))
+
 # Initialize Google Cloud Vision client
-client = vision.ImageAnnotatorClient()
+client = vision.ImageAnnotatorClient(client_options=client_options)
 
 class GoogleAIPDFExtractor:
     def __init__(self, file_url=None):
@@ -28,6 +32,7 @@ class GoogleAIPDFExtractor:
             Dictionary containing text content and bounding box information
         """
         # Create image content for Vision API
+        print(f"OS KEEEY {os.getenv("GOOGLE_API_KEY")}")
         image = types.Image(content=page_img_bytes)
     
         # Perform text detection

@@ -19,9 +19,13 @@ The `/extract` enpoint will give you text, bbox which is a list of four floats, 
 
 The backend also has a pdf proxy feature available at `/proxy-pdf/` since the front-end react-pdf-viewer cannot get PDFs from sites that have CORS restrictions and would often times show a "Network error: cannot fetch resource" error. So, I built this proxy where instead of the front-end, it's the backend that gets the PDF from the given URL using the requests library and then returns a streaming URL that then gets fed into the front-end `react-pdf-viewer` which then shows the preview of the PDF file.
 
+The backend is hosted at: [https://backend-blue-leaf-1353.fly.dev/](https://backend-blue-leaf-1353.fly.dev/)
+
 ### Front end
 
-I have used Next.js with a bunch of tailwind CSS to build the front end. I have used react-pdf-viewer and multiple of its components like highlight and search. I have also used react-markdown to display the transcript of the text. I have deployed the frontend on Vercel, though it won't work due to the backend not being deployed (more on this).
+I have used Next.js with a bunch of tailwind CSS to build the front end. I have used react-pdf-viewer and multiple of its components like highlight and search. I have also used react-markdown to display the transcript of the text. I have deployed the frontend on Vercel. 
+
+The front-end is hosted at: [https://youlearn-project-site.vercel.app/](https://youlearn-project-site.vercel.app/)
 
 ## Performance
 
@@ -29,7 +33,7 @@ I have ran the application (backend) multiple times in a docker contained enviro
 
 ## Flaws
 
-I could not host the backend in time. I have tried a lot and different services but everything got a little bit complicated. Especially since I am using Google's Vision AI, they provide a .JSON file for authentication, so that caused some issues. I later found out that using just API Keys also work, and I have tried to deploy the backend on fly.io, and it still did not work. I will include a link to the fly.io page just in case and maybe keep working to see if I can deploy it.
+The highlighting feature ONLY works for PDF pages that contain real text and does not work for image based PDF or PDF pages. For text-based PDFs the highlighting feature only works for single line highlighting, if you select multiple lines on the transcript, that unfortunately does not get highlighted.
 
 ## Building
 

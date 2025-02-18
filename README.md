@@ -81,4 +81,4 @@ npm run dev
 
 To run the app. Make sure it runs on localhost:3000 and the backend on localhost:8000.
 
-I hope you like my work! (I have skipped homework to complete this project!!)
+I hope you like my work!

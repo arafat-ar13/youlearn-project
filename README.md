@@ -17,6 +17,8 @@ For bbox highlighting I have achieved it, though not fully. For text-based PDF f
 
 The `/extract` enpoint will give you text, bbox which is a list of four floats, plus it will also return a bunch of other info that my app uses.
 
+The backend also has a pdf proxy feature available at `/pdf-proxy/` since the front-end react-pdf-viewer cannot get PDFs from sites that have CORS restrictions and would often times show a "Network error: cannot fetch resource" error. So, I built this proxy where instead of the front-end, it's the backend that gets the PDF from the given URL using the requests library and then returns a streaming URL that then gets fed into the front-end `react-pdf-viewer` which then shows the preview of the PDF file.
+
 ### Front end
 
 I have used Next.js with a bunch of tailwind CSS to build the front end. I have used react-pdf-viewer and multiple of its components like highlight and search. I have also used react-markdown to display the transcript of the text. I have deployed the frontend on Vercel, though it won't work due to the backend not being deployed (more on this).

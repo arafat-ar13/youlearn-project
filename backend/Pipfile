@@ -5,13 +5,12 @@ name = "pypi"
 
 [packages]
 fastapi = {extras = ["standard"], version = "*"}
-pdfminer = "*"
 requests = "*"
-"pdfminer.six" = "*"
 isort = "*"
 autopep8 = "*"
-azure-ai-documentintelligence = "*"
 python-dotenv = "*"
+google-cloud-vision = "*"
+pipreqs = "*"
 
 [dev-packages]
 

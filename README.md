@@ -13,7 +13,9 @@ If the page text returns empty, that means that it is image-based and will requi
 - Fast API 
 - Docker contained in 2 gig memory and 2 CPU cores
 
-For bbox highlighting I have achieved it, though not fully. For text-based PDF files, whenever a line on the transcript on the right is highlighted, the corresponding line will highlight on the PDF. But where it falls short is that I could not develop this feature for image-based text PDFs, though my app can render them perfect. Moreover, only single lines highlighted show on the original PDF on the left, if you highlight multiple lines, the PDF highlighter does NOT work. I needed more time for that. Zooming works flawlessly. For highlighting, I am using a mix of bbox coordinates and pdf-search functionality. Moreover, if you select just one word, multiple words on the right-side PDF will be highlighted. As you select a good chunk of unique text, only that text will be highlighted on the right-side PDF
+For bbox highlighting I have achieved it, though not fully. For text-based PDF files, whenever a line on the transcript on the right is highlighted, the corresponding line will highlight on the PDF. But where it falls short is that I could not develop this feature for image-based text PDFs, though my app can render them perfect. Moreover, only single lines highlighted show on the original PDF on the left, if you highlight multiple lines, the PDF highlighter does NOT work. I needed more time for that. Zooming works flawlessly. For highlighting, I am using a mix of bbox coordinates and pdf-search functionality. Moreover, if you select just one word, multiple words on the right-side PDF will be highlighted. As you select a good chunk of unique text, only that text will be highlighted on the right-side PDF.
+
+The `/extract` enpoint will give you text, bbox which is a list of four floats, plus it will also return a bunch of other info that my app uses.
 
 ### Front end
 
@@ -29,7 +31,7 @@ I could not host the backend in time. I have tried a lot and different services 
 
 ## Building
 
-I am including all the files you will need. The backend and the front-end as well, along with my .env file. I have hosted the source code on GitHub and so will include a link to that for you to download easily. While you can use the requirements.txt and Pipenv files to re-create the environment, I think Docker will be used. A dockerfile is also included and I will include. You can easily build using the Dockerfile. I will also include the Docker Image file just for your convenience.
+I am including all the files you will need. The backend and the front-end as well, along with my .env file (which needs to be placed inside of `backend`). I have hosted the source code on GitHub and so will include a link to that for you to download easily. While you can use the requirements.txt and Pipenv files to re-create the environment, I think Docker will be used. A dockerfile is also included and I will include. You can easily build using the Dockerfile. I will also include the Docker Image file just for your convenience.
 
 To build from dockerfile (from inside the `backend` folder):
 

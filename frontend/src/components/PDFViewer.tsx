@@ -25,6 +25,11 @@ interface PDFViewerProps {
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedText, selectedBlock }) => {
+
+  if (selectedBlock[0]) {
+    console.log(selectedBlock[0].bbox)
+  }
+
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   
   // Create a reference to store the search plugin instance
@@ -90,7 +95,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedText, selectedBl
       
       const height = block.height;
       const width = block.width;
-      const [x0, y0, x1, y1] = block.bbox;
+      const  [x0, y0, x1, y1] = block.bbox;
       const page = block.page;
       
       // Only render highlight if we're on the correct page

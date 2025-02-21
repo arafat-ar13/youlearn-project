@@ -13,21 +13,35 @@ If the page text returns empty, that means that it is image-based and will requi
 - Fast API 
 - Docker contained in 2 gig memory and 2 CPU cores
 
+Initially, I was using Azure's Computer Vision OCR service as it provided excellent bbox coordinates that integrated seamlessly with my highlighting system. However, I discovered just 2 hours before the deadline that Azure's free tier cannot process more than 2 pages, which made it unsuitable for the project requirements (handling PDFs up to 2000 pages). This forced me to quickly switch to Google Cloud Vision API, which provides excellent text recognition but returns bbox coordinates in a different format. Due to time constraints, I couldn't implement the coordinate transformation system needed on the frontend to make highlighting work with Google's format as it had with Azure.
+
+I chose a cloud-based OCR solution over local alternatives like Tesseract because:
+1. Performance - Google's Vision API processes pages much faster than Tesseract would within our 2vCPU/2GB RAM constraints
+2. Accuracy - Cloud OCR services typically provide better accuracy
+3. Docker image size - Using Tesseract would require Ubuntu-level dependencies, significantly increasing the container size
+4. Resource utilization - A Python-only container uses fewer resources and stays within our constraints even when processing large documents
+
 For bbox highlighting I have achieved it, though not fully. For text-based PDF files, whenever a line on the transcript on the right is highlighted, the corresponding line will highlight on the PDF. But where it falls short is that I could not develop this feature for image-based text PDFs, though my app can render them perfect. Moreover, only single lines highlighted show on the original PDF on the left, if you highlight multiple lines, the PDF highlighter does NOT work. I needed more time for that. Zooming works flawlessly. For highlighting, I am using a mix of bbox coordinates and pdf-search functionality. Moreover, if you select just one word, multiple words on the right-side PDF will be highlighted. As you select a good chunk of unique text, only that text will be highlighted on the right-side PDF.
 
 The `/extract` enpoint will give you text, bbox which is a list of four floats, plus it will also return a bunch of other info that my app uses.
 
+The backend also has a pdf proxy feature available at `/proxy-pdf/` since the front-end react-pdf-viewer cannot get PDFs from sites that have CORS restrictions and would often times show a "Network error: cannot fetch resource" error. So, I built this proxy where instead of the front-end, it's the backend that gets the PDF from the given URL using the requests library and then returns a streaming URL that then gets fed into the front-end `react-pdf-viewer` which then shows the preview of the PDF file.
+
+The backend is hosted at: [https://backend-blue-leaf-1353.fly.dev/](https://backend-blue-leaf-1353.fly.dev/)
+
 ### Front end
 
-I have used Next.js with a bunch of tailwind CSS to build the front end. I have used react-pdf-viewer and multiple of its components like highlight and search. I have also used react-markdown to display the transcript of the text. I have deployed the frontend on Vercel, though it won't work due to the backend not being deployed (more on this).
+I have used Next.js with a bunch of tailwind CSS to build the front end. I have used react-pdf-viewer and multiple of its components like highlight and search. I have also used react-markdown to display the transcript of the text. I have deployed the frontend on Vercel. 
+
+The front-end is hosted at: [https://youlearn-project-site.vercel.app/](https://youlearn-project-site.vercel.app/)
 
 ## Performance
 
-I have ran the application (backend) multiple times in a docker contained environment that had 2 cpu cores and 2 gigs of memory, and I have done extensive testing of the app and it has always worked fine. Even with the big 1300 pages PDF, the app has performed significantly good (thanks to PyMuPDF, PDFMiner was 10x slower, if not more).
+I have ran the application (backend) multiple times in a docker contained environment that had 2 cpu cores and 2 gigs of memory, and I have done extensive testing of the app and it has always worked fine. Even with the big 1300 pages PDF, the app has performed significantly good (thanks to PyMuPDF, PDFMiner was 10x slower, if not more). Processing time for large files is less than 10 seconds per file, which is significantly better than the 75-second requirement in the spec.
 
 ## Flaws
 
-I could not host the backend in time. I have tried a lot and different services but everything got a little bit complicated. Especially since I am using Google's Vision AI, they provide a .JSON file for authentication, so that caused some issues. I later found out that using just API Keys also work, and I have tried to deploy the backend on fly.io, and it still did not work. I will include a link to the fly.io page just in case and maybe keep working to see if I can deploy it.
+The highlighting feature ONLY works for PDF pages that contain real text and does not work for image based PDF or PDF pages. For text-based PDFs the highlighting feature only works for single line highlighting, if you select multiple lines on the transcript, that unfortunately does not get highlighted. As mentioned earlier, highlighting for OCR'd content was working with Azure's coordinate system, but couldn't be adapted to Google Cloud Vision's format in the limited time after the necessary platform switch.
 
 ## Building
 
@@ -67,4 +81,4 @@ npm run dev
 
 To run the app. Make sure it runs on localhost:3000 and the backend on localhost:8000.
 
-I hope you like my work! (I have skipped homework to complete this project!!)
+I hope you like my work!

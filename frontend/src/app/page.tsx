@@ -4,13 +4,11 @@ import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { extractPdfText } from '@/services/api';
 
-// Dynamically import the PDF viewer components with no SSR
 const PDFViewer = dynamic(
   () => import('@/components/PDFViewer'),
   { ssr: false }
 );
 
-// Interface for block data
 interface TextBlock {
   text: string;
   page: number;
@@ -32,7 +30,14 @@ export default function Home() {
     try {
       setIsLoading(true);
       const data = await extractPdfText(inputUrl);
-      setTextBlocks(data.blocks);
+      
+      // Sort blocks by page and vertical position
+      const sortedBlocks = [...data.blocks].sort((a, b) => {
+        if (a.page !== b.page) return a.page - b.page;
+        return a.bbox[1] - b.bbox[1];
+      });
+      
+      setTextBlocks(sortedBlocks);
       setProcessedUrl(inputUrl);
     } catch (error) {
       console.error('Error:', error);
@@ -44,6 +49,22 @@ export default function Home() {
   const handleBlockClick = (block: TextBlock, index: number) => {
     setSelectedBlock([block]);
     setActiveBlockIndex(index);
+  };
+
+  // Function to determine if a block should start a new section
+  const shouldStartNewSection = (currentBlock: TextBlock, previousBlock: TextBlock | null): boolean => {
+    if (!previousBlock) return true;
+    
+    // Check if blocks are from different pages
+    if (currentBlock.page !== previousBlock.page) return true;
+    
+    // For Google OCR blocks, check for significant vertical gap
+    if (currentBlock.method === 'google') {
+      const verticalGap = currentBlock.bbox[1] - previousBlock.bbox[3];
+      return verticalGap > 20; // Adjust this threshold as needed
+    }
+    
+    return false;
   };
 
   return (
@@ -79,7 +100,6 @@ export default function Home() {
               <div className="h-full">
                 <PDFViewer 
                   fileUrl={processedUrl} 
-                  selectedText={null}
                   selectedBlock={selectedBlock}
                 />
               </div>
@@ -90,17 +110,22 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto">
                 <h2 className="text-xl font-semibold mb-4 text-black">Extracted Text</h2>
                 <div className="prose max-w-none text-black px-4">
-                  {textBlocks.map((block, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleBlockClick(block, index)}
-                      className={`p-2 my-1 rounded cursor-pointer transition-all duration-200 ease-in-out
-                        ${activeBlockIndex === index ? 'bg-yellow-200' : 'hover:bg-gray-100 hover:border hover:border-gray-300'}
-                      `}
-                    >
-                      {block.text}
-                    </div>
-                  ))}
+                  {textBlocks.map((block, index) => {
+                    const startNewSection = shouldStartNewSection(block, textBlocks[index - 1]);
+                    
+                    return (
+                      <div key={index} className={startNewSection ? 'mt-6' : 'mt-0'}>
+                        <div
+                          onClick={() => handleBlockClick(block, index)}
+                          className={`p-2 rounded cursor-pointer transition-all duration-200 ease-in-out
+                            ${activeBlockIndex === index ? 'bg-yellow-200' : 'hover:bg-gray-100 hover:border hover:border-gray-300'}
+                          `}
+                        >
+                          {block.text}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

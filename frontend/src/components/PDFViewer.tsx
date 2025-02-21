@@ -6,7 +6,6 @@ import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import '@react-pdf-viewer/highlight/lib/styles/index.css';
 
-// Interface for block data
 interface TextBlock {
   text: string;
   page: number;
@@ -18,14 +17,12 @@ interface TextBlock {
 
 interface PDFViewerProps {
   fileUrl: string;
-  selectedText: string | null;
   selectedBlock: TextBlock[];
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedText, selectedBlock }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedBlock }) => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
-  // Highlight plugin for bounding box highlighting
   const highlightPluginInstance = highlightPlugin({
     trigger: Trigger.None,
     renderHighlights: (props) => {
@@ -45,27 +42,70 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedText, selectedBl
         return <></>;
       }
 
-      return (
-        <div
-          style={Object.assign(
-            {},
-            {
-              background: 'yellow',
-              opacity: 0.4,
-            },
-            props.getCssProperties(
+      // Different highlighting based on method
+      if (block.method === "pymupdf") {
+        // Regular precise highlighting for pymupdf
+        return (
+          <div
+            style={Object.assign(
+              {},
               {
-                pageIndex: props.pageIndex,
-                height: ((y1-y0)/height)*100,
-                width: ((x1-x0)/width)*100,
-                left: x0/width*100,
-                top: y0/height*100,
+                background: 'yellow',
+                opacity: 0.4,
               },
-              props.rotation
-            )
-          )}
-        />
-      );
+              props.getCssProperties(
+                {
+                  pageIndex: props.pageIndex,
+                  height: ((y1-y0)/height)*100,
+                  width: ((x1-x0)/width)*100,
+                  left: x0/width*100,
+                  top: y0/height*100,
+                },
+                props.rotation
+              )
+            )}
+          />
+        );
+      } else {
+        // For OCR (google), scale the coordinates by DPI ratio (72/300)
+        const dpiScale = 72/300;  // PDF coordinates to image coordinates ratio
+        
+        // Scale the coordinates back to PDF space
+        const scaledX0 = x0 * dpiScale;
+        const scaledY0 = y0 * dpiScale;
+        const scaledX1 = x1 * dpiScale;
+        const scaledY1 = y1 * dpiScale;
+
+        console.log("Google coords - Original:", {x0, y0, x1, y1});
+        console.log("Google coords - Scaled:", {
+          x0: scaledX0, 
+          y0: scaledY0, 
+          x1: scaledX1, 
+          y1: scaledY1
+        });
+
+        return (
+          <div
+            style={Object.assign(
+              {},
+              {
+                background: 'yellow',
+                opacity: 0.4,
+              },
+              props.getCssProperties(
+                {
+                  pageIndex: props.pageIndex,
+                  height: ((scaledY1-scaledY0)/height)*100,
+                  width: ((scaledX1-scaledX0)/width)*100,
+                  left: (scaledX0/width)*100,
+                  top: (scaledY0/height)*100,
+                },
+                props.rotation
+              )
+            )}
+          />
+        );
+      }
     },
   });
 

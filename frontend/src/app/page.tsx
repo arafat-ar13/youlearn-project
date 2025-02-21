@@ -23,19 +23,16 @@ interface TextBlock {
 export default function Home() {
   const [inputUrl, setInputUrl] = useState('');
   const [processedUrl, setProcessedUrl] = useState('');
-  const [pdfText, setPdfText] = useState<string | null>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedText, setSelectedText] = useState<string | null>(null);
-  const [selectedTextBlock, setSelectedTextBlock] = useState<TextBlock[]>([]);
+  const [selectedBlock, setSelectedBlock] = useState<TextBlock[]>([]);
+  const [activeBlockIndex, setActiveBlockIndex] = useState<number | null>(null);
 
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
       const data = await extractPdfText(inputUrl);
-      setPdfText(data.text);
       setTextBlocks(data.blocks);
-      console.log("DATA BLOCKSSSS", data.blocks);
       setProcessedUrl(inputUrl);
     } catch (error) {
       console.error('Error:', error);
@@ -44,29 +41,9 @@ export default function Home() {
     }
   };
 
-  // Function to handle text selection in the transcript
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (!selection || !selection.toString()) return;
-
-    const text = selection.toString().trim();
-    if (text) {
-      setSelectedText(text);
-      // Find the block containing the selected text
-      const block = textBlocks.find(block => 
-        block.text.includes(text)
-      );
-      if (block) {
-        setSelectedTextBlock([block]);
-      }
-
-      // if (block) {
-      //   // console.log('Found matching block:', block);
-      //   // console.log("Selected text:", text)
-      //   // For now, just log the block info
-      //   // We'll implement highlighting differently
-      // }
-    }
+  const handleBlockClick = (block: TextBlock, index: number) => {
+    setSelectedBlock([block]);
+    setActiveBlockIndex(index);
   };
 
   return (
@@ -102,21 +79,28 @@ export default function Home() {
               <div className="h-full">
                 <PDFViewer 
                   fileUrl={processedUrl} 
-                  selectedText={selectedText}
-                  selectedBlock={selectedTextBlock}
+                  selectedText={null}
+                  selectedBlock={selectedBlock}
                 />
               </div>
             </div>
 
             {/* Extracted Text */}
-            {pdfText && (
-              <div 
-                className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto"
-                onMouseUp={handleTextSelection}
-              >
+            {textBlocks.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-4 h-full overflow-auto">
                 <h2 className="text-xl font-semibold mb-4 text-black">Extracted Text</h2>
-                <div className="prose max-w-none text-black px-4 whitespace-pre-line">
-                  {pdfText}
+                <div className="prose max-w-none text-black px-4">
+                  {textBlocks.map((block, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleBlockClick(block, index)}
+                      className={`p-2 my-1 rounded cursor-pointer transition-all duration-200 ease-in-out
+                        ${activeBlockIndex === index ? 'bg-yellow-200' : 'hover:bg-gray-100 hover:border hover:border-gray-300'}
+                      `}
+                    >
+                      {block.text}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

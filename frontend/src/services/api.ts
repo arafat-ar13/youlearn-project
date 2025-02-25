@@ -2,7 +2,7 @@ export const extractPdfText = async (url: string) => {
     try {
       // URL needs to be encoded since it's part of the path
       const encodedUrl = encodeURIComponent(url);
-      const response = await fetch(`https://backend-blue-leaf-1353.fly.dev/extract/${encodedUrl}`, {
+      const response = await fetch(`https://youlearn.azurewebsites.net/extract/${encodedUrl}`, {
         method: 'GET',
       });
       

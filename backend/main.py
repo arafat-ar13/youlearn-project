@@ -10,7 +10,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://youlearn-project-site.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://youlearn-project-site.vercel.app", "https://purple-stone-0a77e4410.4.azurestaticapps.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

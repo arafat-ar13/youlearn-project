@@ -110,7 +110,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileUrl, selectedBlock }) => {
   });
 
   // Convert the original URL to use the proxy
-  const proxyUrl = `https://backend-blue-leaf-1353.fly.dev/proxy-pdf/${encodeURIComponent(fileUrl)}`;
+  const proxyUrl = `https://youlearn.azurewebsites.net/proxy-pdf/${encodeURIComponent(fileUrl)}`;
 
   return (
     <div className="h-full">
